@@ -24,7 +24,6 @@ main.c
 )
 
 # executables
-
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 
 # linking Raylib
