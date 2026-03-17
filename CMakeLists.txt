@@ -21,6 +21,11 @@ FetchContent_MakeAvailable(raylib)
 # source files
 set(PROJECT_SOURCES
 main.c
+        terminal.c
+        terminal.h
+        config.h
+        commander.c
+        commander.h
 )
 
 # executables
