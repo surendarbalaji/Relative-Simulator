@@ -8,7 +8,7 @@
 #define STRING_CHARACTERS_MAX (44 + 1)
 #define TERMINAL_HISTORY_MAX 100
 
-static const int screenWidth = 800;
+static const int screenWidth = 1200;
 static const int screenHeight = 800;
 
 static const int UNIT = 100; //grid unit
@@ -27,6 +27,7 @@ typedef struct {
     Vector2 acceleration;
     float speed;
     float angle;
+    bool constantThrust;
     Color colour;
 } Ship;
 

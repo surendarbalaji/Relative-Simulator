@@ -4,6 +4,7 @@
 
 #include "raylib.h"
 #include "config.h"
+#include "grid.h"
 #include "terminal.h"
 
 // typedef struct {
@@ -42,6 +43,7 @@ int main(void) {
     ship.velocity = (Vector2){ 0 };
     ship.acceleration = (Vector2){ 0 };
     ship.angle = 0.0f;
+    ship.constantThrust = false;
     ship.colour = SPACEBLUE;
 
     // camera configuration
@@ -51,8 +53,8 @@ int main(void) {
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
 
-    Font dejavu  = LoadFontEx("../resources/dejavu-mono-latin-400-normal.ttf", 20, 0, 0);
-    InitialiseTerminal(screenWidth / 6.0f, screenHeight - 250, screenWidth / 1.5f, 200, dejavu);
+    Font dejavu20  = LoadFontEx("../resources/dejavu-mono-latin-400-normal.ttf", 20, 0, 0);
+    InitialiseTerminal(533.0f, 200, dejavu20);
 
     SetTargetFPS(60);
 
@@ -60,17 +62,33 @@ int main(void) {
 
         UpdateTerminal();
 
+        if (!ship.constantThrust) {
+            ship.acceleration.x = 0;
+            ship.acceleration.y = 0;
+        }
+
+        if (!IsTerminalFocused()) {
+            camera.zoom = expf(logf(camera.zoom) + ((float)GetMouseWheelMove()*0.1f));
+        }
+
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
 
-            ship.acceleration.x = 0.1f * (GetScreenToWorld2D(GetMousePosition(), camera).x - ship.position.x);
-            ship.acceleration.y = 0.1f * (GetScreenToWorld2D(GetMousePosition(), camera).y - ship.position.y);
+            ship.constantThrust = false;
 
-            ship.velocity.x += ship.acceleration.x;
-            ship.velocity.y += ship.acceleration.y;
+            // world based acceleration (affected by zoom)
+            // ship.acceleration.x = 0.1f * (GetScreenToWorld2D(GetMousePosition(), camera).x - ship.position.x);
+            // ship.acceleration.y = 0.1f * (GetScreenToWorld2D(GetMousePosition(), camera).y - ship.position.y);
+
+            // screen based acceleration (not affected by zoom)
+            ship.acceleration.x = 0.1f * GetMousePosition().x - 40.0f;
+            ship.acceleration.y = 0.1f * GetMousePosition().y - 40.0f;
 
             ship.angle = atan2(GetScreenToWorld2D(GetMousePosition(), camera).y - ship.position.y, GetScreenToWorld2D(GetMousePosition(), camera).x - ship.position.x);
 
         }
+
+        ship.velocity.x += ship.acceleration.x;
+        ship.velocity.y += ship.acceleration.y;
 
         ship.position.x += ship.velocity.x * GetFrameTime();
         ship.position.y += ship.velocity.y * GetFrameTime();
@@ -85,36 +103,22 @@ int main(void) {
 
             BeginMode2D(camera);
 
+                drawGrid();
 
-
-                // grid lines (i could include the horizontal lines in the below grid dots loop but why would i do that)
-                for (int x = -1000000; x <=1000000; x+= 100) DrawLine(x, -1000000, x, 1000000, GRAY);
-                for (int y = -1000000; y <=1000000; y+= 100) DrawLine(-1000000, y, 1000000, y, GRAY);
-
-                // grid dots (except drawing circles is expensive so its a small area with dots for now)
-                for (int x = -2000; x <=2000; x+=UNIT) {
-                    for (int y = -2000; y <=2000; y += UNIT) {
-                        DrawCircle(x, y, 2.0f, GRAY);
-                    }
-                }
-
-                // drawing ship
+                // drawing ship (oh my god)
                 DrawTriangle(ship.position, (Vector2){RotateCorner(ship.nose, ship.angle).x + ship.position.x, RotateCorner(ship.nose, ship.angle).y + ship.position.y}, (Vector2){RotateCorner(ship.leftWing, ship.angle).x + ship.position.x, RotateCorner(ship.leftWing, ship.angle).y + ship.position.y}, ship.colour);
                 DrawTriangle(ship.position, (Vector2){RotateCorner(ship.rightWing, ship.angle).x + ship.position.x, RotateCorner(ship.rightWing, ship.angle).y + ship.position.y}, (Vector2){RotateCorner(ship.nose, ship.angle).x + ship.position.x, RotateCorner(ship.nose, ship.angle).y + ship.position.y}, ship.colour);
 
             EndMode2D();
 
-            DrawTextEx(dejavu, "Relative Simulator", (Vector2){190, 210}, fontSize, 0.7, BLACK);
+            DrawTextEx(dejavu20, "Relative Simulator", (Vector2){190, 210}, fontSize, 0.7, BLACK);
 
             DrawTerminal();
-
-
-
 
         EndDrawing();
     }
 
-    UnloadFont(dejavu);
+    UnloadFont(dejavu20);
     CloseTerminal();
     CloseWindow();
 

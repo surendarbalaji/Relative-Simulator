@@ -26,6 +26,8 @@ main.c
         config.h
         commander.c
         commander.h
+        grid.c
+        grid.h
 )
 
 # executables
