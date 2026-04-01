@@ -35,6 +35,8 @@ void executeCommand(inputCommand cmd);
 
 void setSpeed(char **args);
 void setAcceleration(char **args);
+void setThrust(char **args);
+void moveShip(char **args);
 
 void showInfo(char **args);
 void hideInfo(char **args);

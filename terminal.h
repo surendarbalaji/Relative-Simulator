@@ -2,9 +2,9 @@
 
 #include "raylib.h"
 
-void InitialiseTerminal(float width, float height, Font font);
-void DrawTerminal();
-void UpdateTerminal();
+void initialiseTerminal(float width, float height, Font font);
+void drawTerminal();
+void updateTerminal();
 void terminalOutput(char *string);
 
 void toggleInfo();

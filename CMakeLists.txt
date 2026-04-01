@@ -28,6 +28,8 @@ main.c
         commander.h
         grid.c
         grid.h
+        ship.c
+        ship.h
 )
 
 # executables

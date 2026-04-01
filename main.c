@@ -6,6 +6,7 @@
 #include "config.h"
 #include "grid.h"
 #include "terminal.h"
+#include "ship.h"
 
 // typedef struct {
 //     int x;
@@ -24,7 +25,6 @@ Vector2 RotateCorner(Vector2 corner, float angle) {
     return (Vector2){corner.x * cosf(angle) - corner.y * sinf(angle), corner.x * sinf(angle) + corner.y * cosf(angle)};
 }
 
-
 Ship ship;
 
 int main(void) {
@@ -32,19 +32,7 @@ int main(void) {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     InitWindow(screenWidth, screenHeight, "Relative Simulator");
 
-    // ship configuration
-    ship.position = (Vector2){ 0, 0};
-    ship.width = 50.0f;
-    ship.height = 45.0f;
-    ship.nose = (Vector2){ship.height/2, 0};
-    ship.centre = (Vector2){ 0 };
-    ship.leftWing = (Vector2){ -ship.height/2, -ship.width/2};
-    ship.rightWing = (Vector2){ -ship.height/2, ship.width/2};
-    ship.velocity = (Vector2){ 0 };
-    ship.acceleration = (Vector2){ 0 };
-    ship.angle = 0.0f;
-    ship.constantThrust = false;
-    ship.colour = SPACEBLUE;
+    initialiseShip();
 
     // camera configuration
     Camera2D camera = { 0 };
@@ -54,48 +42,18 @@ int main(void) {
     camera.zoom = 1.0f;
 
     Font dejavu20  = LoadFontEx("../resources/dejavu-mono-latin-400-normal.ttf", 20, 0, 0);
-    InitialiseTerminal(533.0f, 200, dejavu20);
+    initialiseTerminal(533.0f, 200, dejavu20);
 
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
 
-        UpdateTerminal();
-
-        if (!ship.constantThrust) {
-            ship.acceleration.x = 0;
-            ship.acceleration.y = 0;
-        }
+        updateTerminal();
+        updateShip(&camera, GetFrameTime());
 
         if (!IsTerminalFocused()) {
             camera.zoom = expf(logf(camera.zoom) + ((float)GetMouseWheelMove()*0.1f));
         }
-
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-
-            ship.constantThrust = false;
-
-            // world based acceleration (affected by zoom)
-            // ship.acceleration.x = 0.1f * (GetScreenToWorld2D(GetMousePosition(), camera).x - ship.position.x);
-            // ship.acceleration.y = 0.1f * (GetScreenToWorld2D(GetMousePosition(), camera).y - ship.position.y);
-
-            // screen based acceleration (not affected by zoom)
-            ship.acceleration.x = 0.1f * GetMousePosition().x - 40.0f;
-            ship.acceleration.y = 0.1f * GetMousePosition().y - 40.0f;
-
-            ship.angle = atan2(GetScreenToWorld2D(GetMousePosition(), camera).y - ship.position.y, GetScreenToWorld2D(GetMousePosition(), camera).x - ship.position.x);
-
-        }
-
-        ship.velocity.x += ship.acceleration.x;
-        ship.velocity.y += ship.acceleration.y;
-
-        ship.position.x += ship.velocity.x * GetFrameTime();
-        ship.position.y += ship.velocity.y * GetFrameTime();
-
-        ship.speed = sqrtf(ship.velocity.x * ship.velocity.x + ship.velocity.y * ship.velocity.y);
-
-        camera.target = ship.position;
 
         BeginDrawing();
 
@@ -113,7 +71,7 @@ int main(void) {
 
             DrawTextEx(dejavu20, "Relative Simulator", (Vector2){190, 210}, fontSize, 0.7, BLACK);
 
-            DrawTerminal();
+            drawTerminal();
 
         EndDrawing();
     }

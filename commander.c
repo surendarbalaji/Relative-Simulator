@@ -7,7 +7,9 @@
 
 #include "config.h"
 #include "grid.h"
+#include "raymath.h"
 #include "terminal.h"
+#include "ship.h"
 
 // converts string to lowercase
 void lowerString(char *string) {
@@ -36,10 +38,12 @@ inputCommand parseCommand(char *input) {
 Command commands[] = {
     {"set", "speed", setSpeed},
     {"set", "acceleration", setAcceleration},
+    {"set", "thrust", setThrust},
     {"toggle", "info", toggleInfo},
     {"toggle", "grid", toggleGrid},
     {"show", NULL, showInfo},
     {"hide", NULL, hideInfo},
+    {"move", NULL, moveShip},
     {NULL, NULL, NULL}
 };
 
@@ -74,7 +78,6 @@ void setSpeed(char **args) {
         snprintf(output, sizeof(output), "new velocity is (%0.2fi + %0.2fj)", ship.velocity.x, ship.velocity.y);
         terminalOutput(output);
 
-
 }
 
 void setAcceleration(char **args) {
@@ -93,6 +96,16 @@ void setAcceleration(char **args) {
     ship.constantThrust = true;
     char output[STRING_CHARACTERS_MAX];
     snprintf(output, sizeof(output), "new acceleration is (%0.2fi + %0.2fj)", ship.acceleration.x, ship.acceleration.y);
+    terminalOutput(output);
+
+}
+
+void setThrust(char **args) {
+
+    ship.thrust = atof(args[2]);
+
+    char output[STRING_CHARACTERS_MAX];
+    snprintf(output, sizeof(output), "new thrust is %0.2f", ship.thrust);
     terminalOutput(output);
 
 }
@@ -116,6 +129,7 @@ void showInfo(char **args) {
             return;
         }
     }
+
     terminalOutput("no such property to display");
 }
 
@@ -128,5 +142,21 @@ void hideInfo(char **args) {
             return;
         }
     }
+
     terminalOutput("no such property to hide");
+}
+
+void moveShip(char **args) {
+
+    if (ship.speed != 0) {
+        terminalOutput("you are not stationary");
+        return;
+    }
+
+    ship.target = (Vector2){atof(args[1]) + ship.position.x, atof(args[2]) + ship.position.y};
+    ship.distanceTarget = Vector2Length(Vector2Subtract(ship.position, ship.target));
+    ship.targetSet = true;
+
+    terminalOutput(TextFormat("moving to (%.0f, %.0f)", ship.target.x, ship.target.y));
+
 }
