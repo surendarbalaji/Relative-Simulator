@@ -30,6 +30,8 @@ main.c
         grid.h
         ship.c
         ship.h
+        oscilloscope.c
+        oscilloscope.h
 )
 
 # executables

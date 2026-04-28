@@ -7,6 +7,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "terminal.h"
+#include "oscilloscope.h"
 
 void initialiseShip() {
 
@@ -22,6 +23,7 @@ void initialiseShip() {
     ship.acceleration = (Vector2){ 0 };
     ship.thrust = 1.0f;
     ship.angle = 0.0f;
+    ship.timer = 0.0f;
     ship.constantThrust = false;
     ship.target = (Vector2){ 0 };
     ship.targetSet = false;
@@ -32,12 +34,14 @@ void initialiseShip() {
 
 void updateShip(Camera2D* camera, float dt) {
 
+    ship.timer += GetFrameTime();
+
     if (!ship.constantThrust) {
         ship.acceleration.x = 0;
         ship.acceleration.y = 0;
     }
 
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !focusOscilloscope()) {
 
         ship.constantThrust = false;
 

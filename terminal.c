@@ -6,6 +6,7 @@
 
 #include "config.h"
 #include "commander.h"
+#include "oscilloscope.h"
 #include "ship.h"
 
 #include "raylib.h"
@@ -29,6 +30,7 @@ static int vectorDialRadius = 40;
 static int stopwatchRadius = 80;
 
 static bool showInfoDisplay = true;
+static bool showOscilliscope = true;
 int infoItemsCount = 0;
 
 static bool focusTerminal = false;
@@ -50,7 +52,6 @@ float CFraction = 0.0f;
 float lorentzFactor = 0.0f;
 
 float typeTimer = 0.0f;
-float stopwatchTimer = 0.0f;
 float stationaryStopwatchTimer = 0.0f;
 float photonTimer = 0.0f;
 float stationaryPhotonTimer = 0.0f;
@@ -66,6 +67,8 @@ void initialiseTerminal(float width, float height, Font font) {
     stopwatchDisplay = (Rectangle){terminal.x + terminal.width + 50, screenHeight - 250, terminal.x - 100, height};
     stopwatchCentre = (Vector2){stopwatchDisplay.x + stopwatchDisplay.width/2, stopwatchDisplay.y + stopwatchDisplay.height/2};
     stopwatchClockDisplay = (Rectangle){stopwatchCentre.x - 15.0f, stopwatchCentre.y + 15.0f, 30.0f, 5.0f};
+
+    initialiseOscilloscope(infoDisplay.x, infoDisplay.y - 10.0f - 120.0f, infoDisplay.width, 110.0f);
 
 
     terminalCam.offset = (Vector2){0};
@@ -188,6 +191,8 @@ void updateTerminal() {
         focusTerminal = false;
     }
 
+    updateOscilloscope();
+
 }
 
 
@@ -302,7 +307,6 @@ void drawTerminal() {
         if (i % 5 == 0) DrawLineEx(Vector2Add(stopwatchCentre, (Vector2){(stopwatchRadius - 8.0f) * cosf((i/5) * PI/6), (stopwatchRadius - 8.0f) * sinf((i/5) * PI/6)}), Vector2Add(stopwatchCentre, (Vector2){(stopwatchRadius) * cosf((i/5) * PI/6), (stopwatchRadius) * sinf((i/5) * PI/6)}), 2.0f, GRAY); // if it works it works okay
     }
 
-    stopwatchTimer += GetFrameTime();
     stationaryStopwatchTimer += GetFrameTime() * lorentzFactor;
 
     DrawCircleLinesV(stopwatchCentre, stopwatchRadius, GRAY);
@@ -311,8 +315,8 @@ void drawTerminal() {
     DrawLineEx(Vector2Subtract(stopwatchCentre, (Vector2){12.0f * cosf((stationaryStopwatchTimer * PI/30) - PI/2), 12.0f * sinf((stationaryStopwatchTimer * PI/30) - PI/2)}), Vector2Add(stopwatchCentre, (Vector2){(stopwatchRadius - 6.0f) * cosf((stationaryStopwatchTimer * PI/30) - PI/2), (stopwatchRadius - 6.0f) * sinf((stationaryStopwatchTimer * PI/30) - PI/2)}), 0.5f, RED);
     DrawLineEx(Vector2Subtract(stopwatchCentre, (Vector2){8.0f * cosf((stationaryStopwatchTimer * PI/1800) - PI/2), 8.0f * sinf((stationaryStopwatchTimer * PI/1800) - PI/2)}), Vector2Add(stopwatchCentre, (Vector2){(stopwatchRadius - 12.0f) * cosf((stationaryStopwatchTimer * PI/1800) - PI/2), (stopwatchRadius - 12.0f) * sinf((stationaryStopwatchTimer * PI/1800) - PI/2)}), 0.75f, RED);
 
-    DrawLineEx(Vector2Subtract(stopwatchCentre, (Vector2){12.0f * cosf((stopwatchTimer * PI/30) - PI/2), 12.0f * sinf((stopwatchTimer * PI/30) - PI/2)}), Vector2Add(stopwatchCentre, (Vector2){(stopwatchRadius - 6.0f) * cosf((stopwatchTimer * PI/30) - PI/2), (stopwatchRadius - 6.0f) * sinf((stopwatchTimer * PI/30) - PI/2)}), 1.0f, GRAY);
-    DrawLineEx(Vector2Subtract(stopwatchCentre, (Vector2){8.0f * cosf((stopwatchTimer * PI/1800) - PI/2), 8.0f * sinf((stopwatchTimer * PI/1800) - PI/2)}), Vector2Add(stopwatchCentre, (Vector2){(stopwatchRadius - 12.0f) * cosf((stopwatchTimer * PI/1800) - PI/2), (stopwatchRadius - 12.0f) * sinf((stopwatchTimer * PI/1800) - PI/2)}), 1.5f, GRAY);
+    DrawLineEx(Vector2Subtract(stopwatchCentre, (Vector2){12.0f * cosf((ship.timer * PI/30) - PI/2), 12.0f * sinf((ship.timer * PI/30) - PI/2)}), Vector2Add(stopwatchCentre, (Vector2){(stopwatchRadius - 6.0f) * cosf((ship.timer * PI/30) - PI/2), (stopwatchRadius - 6.0f) * sinf((ship.timer * PI/30) - PI/2)}), 1.0f, GRAY);
+    DrawLineEx(Vector2Subtract(stopwatchCentre, (Vector2){8.0f * cosf((ship.timer * PI/1800) - PI/2), 8.0f * sinf((ship.timer * PI/1800) - PI/2)}), Vector2Add(stopwatchCentre, (Vector2){(stopwatchRadius - 12.0f) * cosf((ship.timer * PI/1800) - PI/2), (stopwatchRadius - 12.0f) * sinf((ship.timer * PI/1800) - PI/2)}), 1.5f, GRAY);
 
     DrawRectangleLinesEx(stopwatchClockDisplay, 1.0f, GRAY);
 
@@ -338,6 +342,9 @@ void drawTerminal() {
     if (photonTimer >= 2) photonTimer = 0;
     if (stationaryPhotonTimer >= 2) stationaryPhotonTimer = 0;
 
+
+    if (showOscilliscope) drawOscilloscope(dejavu8, dejavu12);
+
 }
 
 
@@ -350,6 +357,11 @@ void terminalOutput(char *string) {
 void toggleInfo() {
     showInfoDisplay = !showInfoDisplay;
     terminalOutput("info display toggled");
+}
+
+void toggleOscilliscope() {
+    showOscilliscope = !showOscilliscope;
+    terminalOutput("oscilliscope toggled");
 }
 
 

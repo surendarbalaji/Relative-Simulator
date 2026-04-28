@@ -7,6 +7,7 @@
 #include "grid.h"
 #include "terminal.h"
 #include "ship.h"
+#include "oscilloscope.h"
 
 // typedef struct {
 //     int x;
@@ -26,6 +27,7 @@ Vector2 RotateCorner(Vector2 corner, float angle) {
 }
 
 Ship ship;
+WaveSource waveSource;
 
 int main(void) {
 
@@ -49,6 +51,7 @@ int main(void) {
     while (!WindowShouldClose()) {
 
         updateTerminal();
+        updateSource(GetFrameTime());
         updateShip(&camera, GetFrameTime());
 
         if (!IsTerminalFocused()) {
@@ -62,6 +65,7 @@ int main(void) {
             BeginMode2D(camera);
 
                 drawGrid();
+                drawSource();
 
                 // drawing ship (oh my god)
                 DrawTriangle(ship.position, (Vector2){RotateCorner(ship.nose, ship.angle).x + ship.position.x, RotateCorner(ship.nose, ship.angle).y + ship.position.y}, (Vector2){RotateCorner(ship.leftWing, ship.angle).x + ship.position.x, RotateCorner(ship.leftWing, ship.angle).y + ship.position.y}, ship.colour);

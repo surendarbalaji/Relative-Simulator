@@ -15,6 +15,7 @@ typedef struct {
     float thrust;
     float speed;
     float angle;
+    float timer;
     bool constantThrust;
     Vector2 target;
     bool targetSet;

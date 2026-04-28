@@ -8,6 +8,7 @@ void updateTerminal();
 void terminalOutput(char *string);
 
 void toggleInfo();
+void toggleOscilliscope();
 
 void CloseTerminal();
 

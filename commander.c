@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "grid.h"
+#include "oscilloscope.h"
 #include "raymath.h"
 #include "terminal.h"
 #include "ship.h"
@@ -41,9 +42,11 @@ Command commands[] = {
     {"set", "thrust", setThrust},
     {"toggle", "info", toggleInfo},
     {"toggle", "grid", toggleGrid},
+    {"toggle", "oscilliscope", toggleOscilliscope},
     {"show", NULL, showInfo},
     {"hide", NULL, hideInfo},
     {"move", NULL, moveShip},
+    {"deploy", "source", deploySource},
     {NULL, NULL, NULL}
 };
 
@@ -63,20 +66,34 @@ void executeCommand(inputCommand cmd) {
 
 void setSpeed(char **args) {
 
-        if (ship.speed == 0) {
-            ship.velocity.x = atof(args[2]) * cosf(ship.angle);
-            ship.velocity.y = atof(args[2]) * sinf(ship.angle);
-        }
+    float newSpeed;
 
+    if (args[2][strlen(args[2])-1] == 'c') {
+
+        args[2][strlen(args[2])-1] = '\0';
+
+        if (atof(args[2]) >= 0.0f && atof(args[2]) < 1.0f) newSpeed = atof(args[2]) * C;
         else {
-            float scale = atof(args[2]) / ship.speed;
-            ship.velocity.x *= scale;
-            ship.velocity.y *= scale;
+            terminalOutput("unsuitable speed");
+            return;
         }
 
-        char output[STRING_CHARACTERS_MAX];
-        snprintf(output, sizeof(output), "new velocity is (%0.2fi + %0.2fj)", ship.velocity.x, ship.velocity.y);
-        terminalOutput(output);
+    } else newSpeed = atof(args[2]);
+
+    if (ship.speed == 0) {
+        ship.velocity.x = newSpeed * cosf(ship.angle);
+        ship.velocity.y = newSpeed * sinf(ship.angle);
+    }
+
+    else {
+        float scale = newSpeed / ship.speed;
+        ship.velocity.x *= scale;
+        ship.velocity.y *= scale;
+    }
+
+    char output[STRING_CHARACTERS_MAX];
+    snprintf(output, sizeof(output), "new velocity is (%0.2fi + %0.2fj)", ship.velocity.x, ship.velocity.y);
+    terminalOutput(output);
 
 }
 
@@ -159,4 +176,9 @@ void moveShip(char **args) {
 
     terminalOutput(TextFormat("moving to (%.0f, %.0f)", ship.target.x, ship.target.y));
 
+}
+
+void deploySource() {
+    createSource(); // just where the ship is for now
+    terminalOutput(TextFormat("wave source deployed at (%.0f, %.0f)", ship.position.x, ship.position.y));
 }
