@@ -4,9 +4,6 @@ a small 2D physics simulator which allows you to interact with concepts of speci
 
 ![](https://github.com/surendarbalaji/Relative-Simulator/blob/main/resources/oscilloscope.gif)
 
-
-![](https://github.com/surendarbalaji/Relative-Simulator/blob/main/resources/displays.gif)
-
 ## features
 * **the ship** - you move around a ship
 * **bunch of cool (in my opinion) physics displays** - as you approach the speed of light you can observe the way different computed values change. this includes the Lorentz factor, and subsequent length contraction. 
