@@ -2,6 +2,9 @@
 
 a small 2D physics simulator which allows you to interact with concepts of special relativity.
 
+![](https://github.com/surendarbalaji/Relative-Simulator/blob/main/resources/oscilloscope.gif)
+
+
 ![](https://github.com/surendarbalaji/Relative-Simulator/blob/main/resources/displays.gif)
 
 ## features
