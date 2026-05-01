@@ -13,6 +13,7 @@ typedef struct {
 typedef struct {
     char *action;
     char *target;
+    char *helpInfo;
     void (*handler)(char **args);
 } Command;
 
@@ -42,5 +43,7 @@ void moveShip(char **args);
 
 void showInfo(char **args);
 void hideInfo(char **args);
+
+void help(char **args);
 
 void deploySource();

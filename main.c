@@ -70,7 +70,7 @@ int main(void) {
                 // drawing ship (oh my god)
                 DrawTriangle(ship.position, (Vector2){RotateCorner(ship.nose, ship.angle).x + ship.position.x, RotateCorner(ship.nose, ship.angle).y + ship.position.y}, (Vector2){RotateCorner(ship.leftWing, ship.angle).x + ship.position.x, RotateCorner(ship.leftWing, ship.angle).y + ship.position.y}, ship.colour);
                 DrawTriangle(ship.position, (Vector2){RotateCorner(ship.rightWing, ship.angle).x + ship.position.x, RotateCorner(ship.rightWing, ship.angle).y + ship.position.y}, (Vector2){RotateCorner(ship.nose, ship.angle).x + ship.position.x, RotateCorner(ship.nose, ship.angle).y + ship.position.y}, ship.colour);
-
+        
             EndMode2D();
 
             DrawTextEx(dejavu20, "Relative Simulator", (Vector2){190, 210}, fontSize, 0.7, BLACK);

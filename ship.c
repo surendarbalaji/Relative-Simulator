@@ -96,8 +96,14 @@ void updateShip(Camera2D* camera, float dt) {
     ship.position.y += ship.velocity.y * dt;
 
     ship.speed = sqrtf(ship.velocity.x * ship.velocity.x + ship.velocity.y * ship.velocity.y);
-    if (ship.speed >= C) ship.velocity = (Vector2){(C - 1) * cosf(ship.angle), (C - 1) * sinf(ship.angle)};
-    ship.speed = sqrtf(ship.velocity.x * ship.velocity.x + ship.velocity.y * ship.velocity.y); // i know i've got this line twice but i haven't yet figured out how to limit speed without it
+
+    // optimised ship speed clamping
+    if (ship.speed >= C) {
+        ship.velocity.x *= (C - 1.0f) / ship.speed;
+        ship.velocity.y *= (C - 1.0f) / ship.speed;
+
+        ship.speed = C - 1.0f;
+    }
 
     camera->target = ship.position;
 

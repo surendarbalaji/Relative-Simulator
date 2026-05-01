@@ -17,8 +17,8 @@ extern WaveSource waveSource;
 typedef enum {
     PULSE_IDLE,
     PULSE_SENT,
-    SOURCE_RECIEVED,
-    RESPONSE_RECIEVED
+    SOURCE_RECEIVED,
+    RESPONSE_RECEIVED
 } PulseStatus;
 
 void initialiseOscilloscope(float x, float y, float width, float height);
@@ -33,3 +33,7 @@ void drawSource();
 
 void dispatchPulse();
 void updatePulse();
+
+float logScaleDial(float value);
+
+void closeOscilloscope();

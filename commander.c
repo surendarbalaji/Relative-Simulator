@@ -4,6 +4,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "config.h"
 #include "grid.h"
@@ -37,17 +38,18 @@ inputCommand parseCommand(char *input) {
 
 // list of commands
 Command commands[] = {
-    {"set", "speed", setSpeed},
-    {"set", "acceleration", setAcceleration},
-    {"set", "thrust", setThrust},
-    {"toggle", "info", toggleInfo},
-    {"toggle", "grid", toggleGrid},
-    {"toggle", "oscilliscope", toggleOscilliscope},
-    {"show", NULL, showInfo},
-    {"hide", NULL, hideInfo},
-    {"move", NULL, moveShip},
-    {"deploy", "source", deploySource},
-    {NULL, NULL, NULL}
+    {"set", "speed", "set the speed of the ship", setSpeed},
+    {"set", "acceleration", "set the acceleration of the ship", setAcceleration},
+    {"set", "thrust", "multiplies acceleration of mouse press", setThrust},
+    {"toggle", "info", "toggles info panel", toggleInfo},
+    {"toggle", "grid", "toggles background grid", toggleGrid},
+    {"toggle", "oscilliscope", "toggles oscilloscope", toggleOscilliscope},
+    {"show", NULL, "show element of info panel", showInfo},
+    {"hide", NULL, "hide elemnt of info panel", hideInfo},
+    {"move", NULL, "move [x] [y] relative to ship", moveShip},
+    {"deploy", "source", "deploys a wave source from ship", deploySource},
+    {"help", NULL, "help [command]", help},
+    {NULL, NULL, NULL, NULL}
 };
 
 // this might be dialolical logic but i finally got it working so that's that
@@ -179,6 +181,32 @@ void moveShip(char **args) {
 }
 
 void deploySource() {
-    createSource(); // just where the ship is for now
+    createSource(); // just where the ship is for now (perhaps add function to send source to a specific location)
     terminalOutput(TextFormat("wave source deployed at (%.0f, %.0f)", ship.position.x, ship.position.y));
+}
+
+void help(char **args) {
+
+    if (args[1] == NULL) {
+        terminalOutput("commands:");
+        terminalOutput("deploy source");
+        terminalOutput("show/hide [property]");
+        terminalOutput("toggle [info/grid/oscilloscope]");
+        terminalOutput("set [speed/acceleration/thrust] [value]");
+        terminalOutput("move [x] [y]");
+        return;
+    }
+
+    for (int i = 0; i < 10; i++) {
+        if (!strcmp(args[1], commands[i].action)) {
+
+            if (commands[i].target == NULL) terminalOutput(TextFormat("%s", commands[i].helpInfo));
+            else if (!strcmp(args[2], commands[i].target)) terminalOutput(TextFormat("%s", commands[i].helpInfo));
+
+            return;
+        }
+    }
+
+    terminalOutput("no such command");
+
 }

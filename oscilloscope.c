@@ -17,19 +17,18 @@ static Vector2 timebaseDial = { 0 };
 static Vector2 amplitudeDial = { 0 };
 static Vector2 dispatchPulseButton = { 0 };
 static Vector2 pulseStatusLight = { 0 };
-static float dialRadius = 7.0f; // adding this because the oscilloscope ui currently looks peculiar and i know i'm going to change it, so may as well make it easy to change
+static float dialRadius = 7.0f;
 static float buttonRadius = 5.0f;
 static Vector2 *wavePoints = NULL;
 static Vector2 *dispatchWavePoints = NULL;
 
 static int wavePointsNum = 0;
 static float timebaseScale = 0.5f;
-static float amplitudeScale = 0.6f;
+static float amplitudeScale = 0.5f;
 static float dispatchFrequency = 2.0f;
 static float pulseSendTime = 0.0f;
 static float timeToSource = 0.0f;
 static float sourceCountdown = 0.0f;
-static float recieveCountdown = 0.0f;
 
 static PulseStatus pulseStatus = PULSE_IDLE;
 
@@ -61,16 +60,18 @@ void initialiseOscilloscope(float x, float y, float width, float height) {
 }
 
 void updateOscilloscope() {
-    // updating display based on dials
+
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointCircle(GetMousePosition(), timebaseDial, dialRadius + 2.0f)) timebaseChanging = true;
 
     if (timebaseChanging) {
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) timebaseChanging = false;
         else {
+
             if (!pulseConfigOn) timebaseScale -= GetMouseDelta().y * 0.005f;
             else dispatchFrequency -= GetMouseDelta().y * 0.005f;
             timebaseScale = Clamp(timebaseScale, 0.05f, 5.0f);
             dispatchFrequency = Clamp(dispatchFrequency, 0.001, 100.0f);
+
         }
     }
 
@@ -80,14 +81,14 @@ void updateOscilloscope() {
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) amplitudeChanging = false;
         else {
             amplitudeScale -= GetMouseDelta().y * 0.005f;
-            amplitudeScale = Clamp(amplitudeScale, 0.05f, 1.0f);
+            amplitudeScale = Clamp(amplitudeScale, 0.05f, 5.0f);
         }
     }
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), powerSwitch)) oscilloscopeOn = !(oscilloscopeOn);
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), pulseSwitch)) pulseConfigOn = !(pulseConfigOn);
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointCircle(GetMousePosition(), dispatchPulseButton, buttonRadius + 2.0f) && pulseStatus == PULSE_IDLE) dispatchPulse();
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointCircle(GetMousePosition(), dispatchPulseButton, buttonRadius + 2.0f) && (pulseConfigOn) && (pulseStatus == PULSE_IDLE)) dispatchPulse();
     if (pulseStatus != PULSE_IDLE) updatePulse();
 
     waveSource.timer += GetFrameTime();
@@ -133,23 +134,19 @@ void drawOscilloscope(Font dejavu8, Font dejavu12) {
     else DrawRectangleV((Vector2){pulseSwitch.x + 2.0f, pulseSwitch.y + pulseSwitch.height/2}, (Vector2){pulseSwitch.width - 4.0f, pulseSwitch.height/2 - 2.0f}, Fade(GRAY, 0.5f));
     DrawTextEx(dejavu12, "CFG", (Vector2){pulseSwitch.x + pulseSwitch.width + 2.0f, pulseSwitch.y + 1.5f}, 12.0f, 0.5f, DARKGRAY);
 
-    // timebase and amplitude dials
+    // timebase dial
     DrawCircleV(timebaseDial, dialRadius, LIGHTGRAY);
     DrawCircleLinesV(timebaseDial, dialRadius, GRAY);
-    DrawLineEx(timebaseDial, (Vector2){timebaseDial.x, timebaseDial.y - dialRadius}, 0.8f, GRAY);
+    DrawLineEx(timebaseDial, (Vector2){timebaseDial.x + dialRadius * cosf(logScaleDial(timebaseScale)), timebaseDial.y + dialRadius * sinf(logScaleDial(timebaseScale))}, 0.8f, GRAY);
     DrawTextEx(dejavu12, "TB", (Vector2){timebaseDial.x - dialRadius - 15.0f, timebaseDial.y - 4.5f}, 12.0f, 0.5f, DARKGRAY);
 
-
-        // temporarily pausing on this i seriously can't deal with these ticks right now
-        // DrawLineEx(Vector2Add(amplitudeDial, (Vector2){(dialRadius - 4.0f) * cosf(i * PI/30), (dialRadius - 4.0f) * sinf(i * PI/30)}), Vector2Add(amplitudeDial, (Vector2){dialRadius * cosf(i * PI/30), dialRadius * sinf(i * PI/30)}), 0.5f, GRAY);
-        // DrawLineEx(Vector2Add(timebaseDial, (Vector2){(dialRadius - 1.0f) * cosf(i * PI/30), (dialRadius - 1.0f) * sinf(i * PI/30)}), Vector2Add(timebaseDial, (Vector2){dialRadius * cosf(i * PI/30), dialRadius * sinf(i * PI/30)}), 0.25f, GRAY);
-        // DrawLineEx(Vector2Add(stopwatchCentre, (Vector2){(stopwatchRadius - 4.0f) * cosf(i * PI/30), (stopwatchRadius - 4.0f) * sinf(i * PI/30)}), Vector2Add(stopwatchCentre, (Vector2){(stopwatchRadius) * cosf(i * PI/30), (stopwatchRadius) * sinf(i * PI/30)}), 1.0f, GRAY);
-
+    // amplitude dial
     DrawCircleV(amplitudeDial, dialRadius, LIGHTGRAY);
     DrawCircleLinesV(amplitudeDial, dialRadius, GRAY);
-    DrawLineEx(amplitudeDial, (Vector2){amplitudeDial.x, amplitudeDial.y - dialRadius}, 0.8f, GRAY);
+    DrawLineEx(amplitudeDial, (Vector2){amplitudeDial.x + dialRadius * cosf(logScaleDial(amplitudeScale)), amplitudeDial.y + dialRadius * sinf(logScaleDial(amplitudeScale))}, 0.8f, GRAY);
     DrawTextEx(dejavu12, "AMP", (Vector2){amplitudeDial.x - dialRadius - 22.0f, amplitudeDial.y - 4.5f}, 12.0f, 0.5f, DARKGRAY);
 
+    // visual divider line
     DrawLineEx((Vector2){oscilloscopeUI.x + 8.0f, amplitudeDial.y + dialRadius + (((dispatchPulseButton.y - buttonRadius) - (amplitudeDial.y + dialRadius)) / 2)}, (Vector2){oscilloscopeDisplay.x - 8.0f, amplitudeDial.y + dialRadius + (((dispatchPulseButton.y - buttonRadius) - (amplitudeDial.y + dialRadius)) / 2)}, 0.3f, BLACK);
 
     // dispatch pulse button
@@ -157,20 +154,29 @@ void drawOscilloscope(Font dejavu8, Font dejavu12) {
     DrawCircleLinesV(dispatchPulseButton, buttonRadius, GRAY);
     DrawTextEx(dejavu12, "DSP", (Vector2){dispatchPulseButton.x + 8.0f, dispatchPulseButton.y - 5.0f}, 12.0f, 0.5f, DARKGRAY);
 
-    // dispatch pulse status light (i'm just doing an if loop for now i'll sort it later)
-    if (pulseStatus == PULSE_IDLE) {
-        DrawCircleV(pulseStatusLight, buttonRadius, Fade(SPACEBLUE, 0.6f));
-        DrawTextEx(dejavu12, TextFormat("IDLE"), (Vector2){pulseStatusLight.x + 8.0f, pulseStatusLight.y - 5.0f}, 12.0f, 0.5f, DARKGRAY);
-    } else if (pulseStatus == PULSE_SENT) {
-        DrawCircleV(pulseStatusLight, buttonRadius, Fade(RED, 0.6f));
-        DrawTextEx(dejavu12, TextFormat("SENT"), (Vector2){pulseStatusLight.x + 8.0f, pulseStatusLight.y - 5.0f}, 12.0f, 0.5f, DARKGRAY);
-    } else if (pulseStatus == SOURCE_RECIEVED) {
-        DrawCircleV(pulseStatusLight, buttonRadius, Fade(ORANGE, 0.6f));
-        DrawTextEx(dejavu12, TextFormat("RESP"), (Vector2){pulseStatusLight.x + 8.0f, pulseStatusLight.y - 5.0f}, 12.0f, 0.5f, DARKGRAY);
-    } else if (pulseStatus == RESPONSE_RECIEVED) {
+    // dispatch pulse status light
+    switch (pulseStatus) {
+
+        case PULSE_IDLE:
+            DrawCircleV(pulseStatusLight, buttonRadius, Fade(SPACEBLUE, 0.6f));
+            DrawTextEx(dejavu12, "IDLE", (Vector2){pulseStatusLight.x + 8.0f, pulseStatusLight.y - 5.0f}, 12.0f, 0.5f, DARKGRAY);
+            break;
+
+        case PULSE_SENT:
+            DrawCircleV(pulseStatusLight, buttonRadius, Fade(RED, 0.6f));
+            DrawTextEx(dejavu12, "SENT", (Vector2){pulseStatusLight.x + 8.0f, pulseStatusLight.y - 5.0f}, 12.0f, 0.5f, DARKGRAY);
+            break;
+
+        case SOURCE_RECEIVED:
+            DrawCircleV(pulseStatusLight, buttonRadius, Fade(ORANGE, 0.6f));
+            DrawTextEx(dejavu12, "RESP", (Vector2){pulseStatusLight.x + 8.0f, pulseStatusLight.y - 5.0f}, 12.0f, 0.5f, DARKGRAY);
+            break;
+
+        case RESPONSE_RECEIVED:
         DrawCircleV(pulseStatusLight, buttonRadius, Fade(DARKGREEN, 0.3f));
-        DrawTextEx(dejavu12, TextFormat("RCVD"), (Vector2){pulseStatusLight.x + 8.0f, pulseStatusLight.y - 5.0f}, 12.0f, 0.5f, DARKGRAY);
+        DrawTextEx(dejavu12, "RCVD", (Vector2){pulseStatusLight.x + 8.0f, pulseStatusLight.y - 5.0f}, 12.0f, 0.5f, DARKGRAY);
     }
+
     DrawCircleLinesV(pulseStatusLight, buttonRadius, Fade(GRAY, 0.6f));
 
     // dispatch frequency
@@ -179,17 +185,21 @@ void drawOscilloscope(Font dejavu8, Font dejavu12) {
     // dispatch countdown
     DrawTextEx(dejavu12, TextFormat("%0.1fs", sourceCountdown), (Vector2){pulseStatusLight.x - 4.0f, pulseStatusLight.y + 10.0f}, 12.0f, 0.5, DARKGRAY);
 
-    for (int i = 1; i < 10; i++) {
-        DrawLineEx((Vector2){oscilloscopeDisplay.x + i * (oscilloscopeDisplay.width / 10), oscilloscopeDisplay.y}, (Vector2){oscilloscopeDisplay.x + i * (oscilloscopeDisplay.width / 10), oscilloscopeDisplay.y + oscilloscopeDisplay.height}, 0.8f, Fade(GRAY, 0.2f));
-        DrawLineEx((Vector2){oscilloscopeDisplay.x, oscilloscopeDisplay.y + i * (oscilloscopeDisplay.height / 10)}, (Vector2){oscilloscopeDisplay.x + oscilloscopeDisplay.width, oscilloscopeDisplay.y + i * (oscilloscopeDisplay.height / 10)}, 0.8f, Fade(GRAY, 0.2f));
-    }
+    BeginScissorMode(oscilloscopeDisplay.x, oscilloscopeDisplay.y, oscilloscopeDisplay.width, oscilloscopeDisplay.height);
 
-    if (pulseConfigOn && oscilloscopeOn) DrawSplineLinear(dispatchWavePoints, wavePointsNum, 1.5f, Fade(SPACEBLUE, 0.4f));
-    DrawSplineLinear(wavePoints, wavePointsNum, 1.5f, RAYWHITE);
+        for (int i = 1; i < 10; i++) {
+            DrawLineEx((Vector2){oscilloscopeDisplay.x + i * (oscilloscopeDisplay.width / 10), oscilloscopeDisplay.y}, (Vector2){oscilloscopeDisplay.x + i * (oscilloscopeDisplay.width / 10), oscilloscopeDisplay.y + oscilloscopeDisplay.height}, 0.8f, Fade(GRAY, 0.2f));
+            DrawLineEx((Vector2){oscilloscopeDisplay.x, oscilloscopeDisplay.y + i * (oscilloscopeDisplay.height / 10)}, (Vector2){oscilloscopeDisplay.x + oscilloscopeDisplay.width, oscilloscopeDisplay.y + i * (oscilloscopeDisplay.height / 10)}, 0.8f, Fade(GRAY, 0.2f));
+        }
 
-    DrawTextEx(dejavu8, TextFormat("%0.2fHz", waveSource.frequency), (Vector2){oscilloscopeDisplay.x + 4.0f, oscilloscopeDisplay.y + 3.0f}, 8.0f, 0.5f, DARKGRAY);
+        if (pulseConfigOn && oscilloscopeOn) DrawSplineLinear(dispatchWavePoints, wavePointsNum, 1.5f, Fade(SPACEBLUE, 0.4f));
+        DrawSplineLinear(wavePoints, wavePointsNum, 1.5f, RAYWHITE);
 
-    DrawRectangleLinesEx(oscilloscopeDisplay, 1.0f, GRAY);
+        DrawTextEx(dejavu8, TextFormat("%0.2fHz", waveSource.frequency), (Vector2){oscilloscopeDisplay.x + 4.0f, oscilloscopeDisplay.y + 3.0f}, 8.0f, 0.5f, DARKGRAY);
+
+        DrawRectangleLinesEx(oscilloscopeDisplay, 1.0f, GRAY);
+
+    EndScissorMode();
 
 }
 
@@ -215,31 +225,72 @@ void drawSource() {
 void dispatchPulse() {
     pulseSendTime = waveSource.timer;
     timeToSource = Vector2Distance(ship.position, waveSource.position) / C;
+    sourceCountdown = timeToSource;
     pulseStatus = PULSE_SENT;
 }
 
 void updatePulse() {
 
-    if (pulseStatus == PULSE_SENT) {
-        sourceCountdown = timeToSource - (waveSource.timer - pulseSendTime);
+    switch (pulseStatus) {
 
-        if (sourceCountdown <= 0) {
-            pulseStatus = SOURCE_RECIEVED;
-            printf("source recieved");
-            pulseSendTime = waveSource.timer;
+        case PULSE_IDLE:
+            return; // adding this to get rid of that damn yellow line. i know this case is impossible since I'm already checking.
 
-        }
+        case PULSE_SENT:
+
+            float timeElapsed = waveSource.timer - pulseSendTime;
+            sourceCountdown = timeToSource - timeElapsed;
+
+            if (sourceCountdown < 0.01f) {
+                pulseStatus = SOURCE_RECEIVED;
+                pulseSendTime = waveSource.timer;
+            }
+
+            break;
+
+        case SOURCE_RECEIVED:
+
+            timeElapsed = waveSource.timer - pulseSendTime;
+            float returnPulseTime = Vector2Distance(ship.position, waveSource.position) / C;
+            sourceCountdown = returnPulseTime - timeElapsed;
+
+            if (sourceCountdown < 0.01f) {
+                pulseStatus = RESPONSE_RECEIVED;
+                pulseSendTime = ship.timer;
+                waveSource.frequency = dispatchFrequency;
+            }
+
+            break;
+
+        case RESPONSE_RECEIVED:
+
+            timeElapsed = ship.timer - pulseSendTime;
+            sourceCountdown = 3.0f - timeElapsed;
+
+            if (sourceCountdown <= 0.0f) {
+                pulseStatus = PULSE_IDLE;
+                sourceCountdown = 0.0f;
+            }
+
+        break;
+
+    }
+}
+
+float logScaleDial(float value) {
+
+    if (value <= 0.5f) {
+        float t = (logf(value) - logf(0.05f)) / (logf(0.5f) - logf(0.05f));
+        return (-3*PI/4) + t * ((-PI/2) - (-3*PI/4));
+
+    } else {
+        float t = (logf(value) - logf(0.5f)) / (logf(5.0f) - logf(0.5f));
+        return ((-PI/2) + t * ((3*PI/4) - (-PI/2)));
     }
 
-    else if (pulseStatus == SOURCE_RECIEVED) {
-        timeToSource = Vector2Distance(ship.position, waveSource.position) / C;
-        sourceCountdown = timeToSource - (waveSource.timer - pulseSendTime);
+}
 
-        if (sourceCountdown <= 0) {
-            pulseStatus = RESPONSE_RECIEVED;
-            waveSource.frequency = dispatchFrequency;
-            sourceCountdown = 0.0f;
-        }
-
-    }
+void closeOscilloscope() {
+    if (wavePoints != NULL) free(wavePoints);
+    if (dispatchWavePoints != NULL) free(dispatchWavePoints);
 }

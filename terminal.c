@@ -38,7 +38,11 @@ static bool focusTerminal = false;
 char input[STRING_CHARACTERS_MAX] = "\0";
 char displayText[64];
 int letterCount = 0;
+int cursorPosition = 0;
 char outputChannel[TERMINAL_HISTORY_MAX][STRING_CHARACTERS_MAX];
+char inputHistory[TERMINAL_HISTORY_MAX][STRING_CHARACTERS_MAX];
+int inputHistoryCount = 0;
+int inputHistoryIndex = 0;
 int historyCount = 0;
 
 Font terminalFont = {0};
@@ -70,7 +74,6 @@ void initialiseTerminal(float width, float height, Font font) {
 
     initialiseOscilloscope(infoDisplay.x, infoDisplay.y - 10.0f - 120.0f, infoDisplay.width, 110.0f);
 
-
     terminalCam.offset = (Vector2){0};
     terminalCam.target = (Vector2){0};
     terminalCam.rotation = 0.0f;
@@ -87,7 +90,6 @@ void initialiseTerminal(float width, float height, Font font) {
 
 }
 
-
 void updateTerminal() {
 
     vectorDialCentre = (Vector2){infoDisplay.x + 10.0f + vectorDialRadius,  infoDisplay.y + 180.0f - (infoItemsCount-1) * 18.0f - 55.0f};
@@ -98,7 +100,7 @@ void updateTerminal() {
 
     int key = GetCharPressed();
 
-    while (key > 0) {
+        while (key > 0) {
             if ((key >= 32) && (key <= 125)) {
                 if (letterCount < STRING_CHARACTERS_MAX) {
 
@@ -149,6 +151,10 @@ void updateTerminal() {
 
             if (historyCount == TERMINAL_HISTORY_MAX) historyCount = 0;
 
+            strcpy(inputHistory[inputHistoryCount], input);
+            inputHistoryCount++;
+            inputHistoryIndex = inputHistoryCount;
+
             if (input[0] == '\0') {
                 strcpy(input, " ");
             }
@@ -170,10 +176,44 @@ void updateTerminal() {
             typeTimer = 0.0f;
         }
 
-        if (IsKeyPressed(KEY_UP)) {
-            strcpy(input, outputChannel[historyCount-2] + 2); //temp simple feature for now
-            letterCount = strlen(input);
-            typeTimer = 0.0f;
+        if ((IsKeyPressed(KEY_UP) || IsKeyPressedRepeat(KEY_UP)) && inputHistoryCount > 0) {
+
+            if (inputHistoryIndex > 0) {
+                inputHistoryIndex--;
+                strcpy(input, inputHistory[inputHistoryIndex]);
+                letterCount = strlen(input);
+                typeTimer = 0.0f;
+            }
+
+        }
+
+        if (IsKeyPressed(KEY_DOWN) || IsKeyPressedRepeat(KEY_DOWN)) {
+
+            if (inputHistoryIndex < inputHistoryCount) {
+                inputHistoryIndex++;
+
+                if (inputHistoryIndex == inputHistoryCount) {
+                    input[0] = '\0';
+                    letterCount = 0;
+                } else {
+                    strcpy(input, inputHistory[inputHistoryIndex]);
+                    letterCount = strlen(input);
+                    cursorPosition = letterCount;
+                }
+
+                typeTimer = 0.0f;
+
+            }
+        }
+
+        if ((IsKeyPressed(KEY_LEFT) || IsKeyPressedRepeat(KEY_LEFT)) && cursorPosition > 0) {
+            // cursorPosition--;
+            // typeTimer = 0.0f;
+        }
+
+        if ((IsKeyPressed(KEY_RIGHT) || IsKeyPressedRepeat(KEY_RIGHT)) && cursorPosition < letterCount) {
+            // cursorPosition++;
+            // typeTimer = 0.0f;
         }
 
         // arrow before current typing (once there are responses this will be added to input history too)
@@ -269,9 +309,9 @@ void drawTerminal() {
             x = (0.90 * vectorDialRadius) + (0.10 * vectorDialRadius) * log(ship.speed / 20000) / log(C / 20000);
         }
 
+
         DrawLineEx(vectorDialCentre, Vector2Add(vectorDialCentre, Vector2Scale(Vector2Normalize(ship.velocity), x)), 1.5f, BLUE);
         DrawLineV(vectorDialCentre, Vector2Add(vectorDialCentre, Vector2Scale(Vector2Normalize(ship.acceleration), 20.0f)), RED);
-
 
         // drawing bars
 
@@ -296,6 +336,7 @@ void drawTerminal() {
         DrawTextEx(dejavu12, TextFormat("%.2fc", CFraction), (Vector2){barInfoDisplay.x, barInfoDisplay.y + 2.0f}, 12.0f, 0.7f, GRAY);
         DrawTextEx(dejavu12, TextFormat("%.2f(y)", lorentzFactor), (Vector2){barInfoDisplay.x, barInfoDisplay.y + 2.0f + 15.0f}, 12.0f, 0.7f, GRAY);
         DrawTextEx(dejavu12, TextFormat("%.2fm", 1.0f/lorentzFactor), (Vector2){barInfoDisplay.x, barInfoDisplay.y + 2.0f + 30.0f}, 12.0f, 0.7f, GRAY);
+
     }
 
     // drawing stopwatch
@@ -347,7 +388,6 @@ void drawTerminal() {
 
 }
 
-
 void terminalOutput(char *string) {
     strcpy(outputChannel[historyCount], string);
     historyCount++;
@@ -370,6 +410,7 @@ void CloseTerminal() {
     UnloadSound(keyPress[0]);
     UnloadFont(dejavu12);
     UnloadFont(dejavu8);
+    closeOscilloscope();
 }
 
 bool IsTerminalFocused() {
